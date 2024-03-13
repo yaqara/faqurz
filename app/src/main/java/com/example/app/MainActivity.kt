@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,11 +23,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.common.FirebaseVisionImage
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
@@ -48,6 +47,8 @@ class MainActivity : ComponentActivity() {
             recognizeText(bitmap)
         }
     }
+    private var recognizedText by mutableStateOf("")
+    private var isTextRec = false
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     @SuppressLint("QueryPermissionsNeeded")
@@ -61,7 +62,6 @@ class MainActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val text = remember { mutableStateOf("") }
-                val context = LocalContext.current
 
                 Button(
                     onClick = {
@@ -73,21 +73,14 @@ class MainActivity : ComponentActivity() {
                         text = "Take photo",
                         modifier = Modifier
                             .padding(bottom = 5.dp)
-
                     )
                 }
-
-                text.value.let { recognizedText ->
-                    if (recognizedText.isNotEmpty()) {
-                        var text by remember {
-                            mutableStateOf(recognizedText)
-                        }
-                        TextField(text, { text = it })
-                        Button(onClick = {
-                            val str = sendRequest(text.toString())
-                        }) {
-                            Text("Отправить")
-                        }
+                if (isTextRec) {
+                    TextField(value = recognizedText, onValueChange = { recognizedText = it })
+                    Button(onClick = {
+                        sendRequest(recognizedText)
+                    }) {
+                        Text("Send")
                     }
                 }
             }
@@ -96,15 +89,12 @@ class MainActivity : ComponentActivity() {
 
     @RequiresExtension(extension = Build.VERSION_CODES.S, version = 7)
     private fun recognizeText(bitmap: Bitmap) {
-        val image = FirebaseVisionImage.fromBitmap(bitmap)
-        val detector = FirebaseVision.getInstance().onDeviceTextRecognizer
-        detector.processImage(image)
+        val image = InputImage.fromBitmap(bitmap, 0)
+        val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+        recognizer.process(image)
             .addOnSuccessListener {
-                val text = it.text
-                Toast.makeText(this@MainActivity, text, Toast.LENGTH_LONG).show()
-            }
-            .addOnFailureListener {
-                Toast.makeText(this@MainActivity, "Текст на картинке не был распознан", Toast.LENGTH_LONG).show()
+                recognizedText = it.text
+                isTextRec = true
             }
     }
 

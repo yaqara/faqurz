@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid) version "1.9.22"
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -63,6 +64,9 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.vision.common)
+    implementation(libs.play.services.mlkit.text.recognition.common)
+    implementation(libs.play.services.mlkit.text.recognition)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -70,5 +74,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.firebase.ml.vision)
+    implementation("com.google.firebase:firebase-ml-vision:24.1.0")
+    implementation("com.google.firebase:firebase-ml-vision-barcode-model:16.1.1")
+    implementation("com.google.android.gms:play-services-vision:20.1.3")
+    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
+
 }
